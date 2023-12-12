@@ -1,10 +1,33 @@
 const express = require("express");
+const mysql = require("mysql");
 const app = express ();
-const indexRouter = require("./routers/indexRouter");
+const conn = require('./db')
 
 app.use(express.json());
-app.use("/api", indexRouter);
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+    console.log(`dataparu API started on port ${port}`);
+});
 
-app.listen(4000, () => {
-    console.log("server started on port 4000");
-}); 
+app.get("/", async (req, res) => {
+    res.json({ status: "data paru siap!"});
+});
+
+app.get("/:dataparu", async (req, res) => {
+    const query = "SELECT * FROM dataparu WHERE name = ?";
+    pool.query(query, [ req.params.dataparu ], (error, results) => {
+        if (!results[0]) {
+            res.json({ status: "Not found!" });
+        } else {
+            res.json(results[0]);
+        }
+    });
+});
+
+const pool = mysql.createPool({
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    socketPath: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`,
+});
+
